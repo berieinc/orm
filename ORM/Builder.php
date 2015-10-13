@@ -257,8 +257,6 @@ class Builder
 		$this->query = !empty($this->query) ?
 			$this->query : $this->generateQuery();
 
-		var_dump($this->query);
-
 		$this->queryClass = new Query($this->database, $this->query);
 
 		return;
