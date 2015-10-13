@@ -1,0 +1,10 @@
+{
+    "name": "berie/orm",
+    "description": "PHP ORM for working with MySQL",
+    "autoload": {
+        "psr-4": { "Berie\\": [""] }
+    },
+    "require": {
+        "php": ">=5.3.0"
+    }
+}
