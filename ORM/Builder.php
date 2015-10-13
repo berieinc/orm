@@ -9,20 +9,25 @@ use Berie\ORM\Exceptions;
  * @subpackage 	Builder
  * @author 		Eugen Melnychenko
  */
-class Builder extends \Berie\ORM
+class Builder
+	extends \Berie\ORM
 {
 	private $database;
-	private $preferences;
+
+	private $operation;
+	private $table;
+	private $fields;
+	private $set;
+	private $where;
+	private $alias;
+	private $order;
+	private $limit;
+	private $offset;
 
 	const SELECT = 1;
-
 	const INSERT = 2;
 	const UPDATE = 3;
 	const DELETE = 4;
-
-	const R_ARRAY 	= 10;
-	const R_ENTITY 	= 11;
-	const R_COUNT 	= 12;
 
 	/**
 	 * @param \PDO $connect
@@ -31,9 +36,7 @@ class Builder extends \Berie\ORM
 	 */
 	public function __construct(\PDO $connect)
 	{
-		$this->database = $connect;
-
-		return;
+		return $this->database = $connect;
 	}
 
 	/**
@@ -43,39 +46,25 @@ class Builder extends \Berie\ORM
 	 */
 	public function insert($table)
 	{
-		if(empty($this->preferences['operation'])) {
-			$this->preferences = [
-				'operation' => self::INSERT,
-				'global'	=> [
-					'table'		=> $table,
-				],
-			];
-		} else {
-			(new Exceptions())->BuilderDoubleOperationError();
-		}
+		$this->operation = empty($this->operation) ?
+			self::INSERT : (new Exceptions())->B0020();
+
+		$this->table = $table;
 
 		return $this;
 	}
 
 	/**
 	 * @param array $fields
-	 * @param string $alias
 	 *
 	 * @return \Berie\ORM\Builder
 	 */
-	public function select(array $fields = [], $alias = null)
+	public function select(array $fields = [])
 	{
-		if(empty($this->preferences['operation'])) {
-			$this->preferences = [
-				'operation' => self::SELECT,
-				'global'	=> [
-					'fields'	=> $fields,
-					'alias' 	=> $alias,
-				],
-			];
-		} else {
-			(new Exceptions())->BuilderDoubleOperationError();
-		}
+		$this->operation = empty($this->operation) ?
+			self::SELECT : (new Exceptions())->B0020();
+
+		$this->fields = $fields;
 
 		return $this;
 	}
@@ -87,16 +76,10 @@ class Builder extends \Berie\ORM
 	 */
 	public function update($table)
 	{
-		if(empty($this->preferences['operation'])) {
-			$this->preferences = [
-				'operation' => self::UPDATE,
-				'global'	=> [
-					'table'		=> $table,
-				],
-			];
-		} else {
-			(new Exceptions())->BuilderDoubleOperationError();
-		}
+		$this->operation = empty($this->operation) ?
+			self::UPDATE : (new Exceptions())->B0020();
+
+		$this->table = $table;
 
 		return $this;
 	}
@@ -106,29 +89,28 @@ class Builder extends \Berie\ORM
 	 */
 	public function delete()
 	{
-		if(empty($this->preferences['operation'])) {
-			$this->preferences['operation'] = self::DELETE;
-		} else {
-			(new Exceptions())->BuilderDoubleOperationError();
-		}
+		$this->operation = empty($this->operation) ?
+			self::DELETE : (new Exceptions())->B0020();
 
 		return $this;
 	}
 
 	/**
 	 * @param string $table
+	 * @param string $alias
 	 *
 	 * @return \Berie\ORM\Builder
 	 */
 	public function from($table, $alias = null)
 	{
-		if(empty($this->preferences['table'])
-			&& $this->preferences['operation'] != self::INSERT
-			&& $this->preferences['operation'] != self::UPDATE
+		if(empty($this->table)
+			&& $this->operation != self::INSERT
+			&& $this->operation != self::UPDATE
 		) {
-			$this->preferences['global']['table'] = $table;
+			$this->table = $table;
+			$this->alias = $alias;
 		} else {
-			(new Exceptions())->BuilderDoubleTableError();
+			(new Exceptions())->B0025();
 		}
 
 		return $this;
@@ -136,17 +118,17 @@ class Builder extends \Berie\ORM
 
 	/**
 	 * @param mixed $column
-	 * @param mixed $value
+	 * @param string $value
 	 *
 	 * @return \Berie\ORM\Builder
 	 */
 	public function set($column, $value = null)
 	{
-		if($this->preferences['operation'] == self::INSERT
-			|| $this->preferences['operation'] == self::UPDATE
+		if($this->operation == self::INSERT
+			|| $this->operation == self::UPDATE
 		) {
-			$set = !empty($this->preferences['global']['set']) ?
-				$this->preferences['global']['set'] : [];
+			$set = !empty($this->set) ?
+				$this->set : [];
 
 			if(is_array($column)) {
 				$set = $column;
@@ -158,9 +140,9 @@ class Builder extends \Berie\ORM
 
 			}
 
-			$this->preferences['global']['set'] = $set;
+			$this->set = $set;
 		} else {
-
+			(new Exceptions())->B0040();
 		}
 
 		return $this;
@@ -168,18 +150,18 @@ class Builder extends \Berie\ORM
 
 	/**
 	 * @param mixed $column
-	 * @param mixed $value
+	 * @param string $value
 	 *
 	 * @return \Berie\ORM\Builder
 	 */
 	public function where($column, $value = null)
 	{
-		if($this->preferences['operation'] == self::SELECT
-			|| $this->preferences['operation'] == self::UPDATE
-			|| $this->preferences['operation'] == self::DELETE
+		if($this->operation == self::SELECT
+			|| $this->operation == self::UPDATE
+			|| $this->operation == self::DELETE
 		) {
-			$where = !empty($this->preferences['global']['where']) ?
-				$this->preferences['global']['where'] : '';
+			$where = !empty($this->where) ?
+				$this->where : '';
 
 			if(is_array($column)) {
 				foreach ($column as $key => $val) {
@@ -203,9 +185,68 @@ class Builder extends \Berie\ORM
 
 			}
 
-			$this->preferences['global']['where'] = $where;
+			$this->where = $where;
 		} else {
+			(new Exceptions())->B0050();
+		}
 
+		return $this;
+	}
+
+	/**
+	 * @param string $column
+	 * @param string $type
+	 *
+	 * @return \Berie\ORM\Builder
+	 */
+	public function order($column = 'id', $type = 'ASC')
+	{
+		if(($this->operation == self::SELECT
+			|| $this->operation == self::DELETE)
+			&& empty($this->order)
+			&& ($type == 'ASC' || $type == 'DESC')
+		) {
+			$this->order = "ORDER BY " . $column . " " . $type;
+		} else {
+			(new Exceptions())->B0060();
+		}
+
+		return $this;
+	}
+
+	/**
+	 * @param integer $number
+	 *
+	 * @return \Berie\ORM\Builder
+	 */
+	public function limit($number = 0)
+	{
+		if(($this->operation == self::SELECT
+			|| $this->operation == self::DELETE)
+			&& empty($this->limit)
+		) {
+			$this->limit = "LIMIT " . $number;
+		} else {
+			(new Exceptions())->B0065();
+		}
+
+		return $this;
+	}
+
+	/**
+	 * @param integer $number
+	 *
+	 * @return \Berie\ORM\Builder
+	 */
+	public function offset($number = 0)
+	{
+		if(($this->operation == self::SELECT
+			|| $this->operation == self::DELETE)
+			&& empty($this->offset)
+		) {
+			$this->offset = "OFFSET " . $number;
+		} else {
+			(new Exceptions())->B0070();
 		}
 
 		return $this;
@@ -213,19 +254,24 @@ class Builder extends \Berie\ORM
 
 	public function getQuery()
 	{
-		$query = !empty($this->query) ?
-			$this->query : $this->formOperation();
+		$this->query = !empty($this->query) ?
+			$this->query : $this->generateQuery();
 
-		$this->queryObj = new Query($this->database, $this->query);
-		return $this->queryObj;
+			
+		$this->queryClass = new Query($this->database, $this->query);
+
+		return;
 	}
 
+	/**
+	 * @return array
+	 */
 	public function getArray()
 	{
-		$this->queryObj = !empty($this->queryObj) ?
-			$this->queryObj : $this->getQuery();
+		!empty($this->queryClass) ?
+			$this->queryClass : $this->getQuery();
 
-		$prepare = $this->queryObj->getPrepare();
+		$prepare = $this->queryClass->getPrepare();
 
 		return $prepare->fetchAll(\PDO::FETCH_ASSOC);
 	}
@@ -233,13 +279,15 @@ class Builder extends \Berie\ORM
 	public function getEntity()
 	{
 		$entity = [];
-		$array 	= $this->getArray();
+
+		$resultData = $this->getArray();
+
 		$preferences = [
-			'table'	=> $this->preferences['global']['table'],
+			'table'	=> $this->table,
 		];
 
-		if(count($array) >= 1) {
-			foreach ($array as $key => $value) {
+		if(count($resultData) >= 1) {
+			foreach ($resultData as $key => $value) {
 				$preferences['id'] = $value['id'];
 
 				$entity[] = new \Berie\ORM\Entity($value, $preferences);
@@ -251,122 +299,188 @@ class Builder extends \Berie\ORM
 		return $entity;
 	}
 
+	/**
+	 * @return integer
+	 */
 	public function getCount()
 	{
-		$this->queryObj = !empty($this->queryObj) ?
-			$this->queryObj : $this->getQuery();
+		$this->queryClass = !empty($this->queryClass) ?
+			$this->queryClass : $this->getQuery();
 
-		$prepare = $this->queryObj->getPrepare();
+		$prepare = $this->queryClass->getPrepare();
+
 		return $prepare->rowCount();
 	}
 
-	private function formOperation()
+	private function generateQuery()
 	{
 		$query = '';
-		$global = $this->preferences['global'];
 
-		$fields = !empty($global['fields']) ?
-			$global['fields'] : null;
-
-		$count = !empty($global['count']) ?
-			$global['count'] : false;
-
-		$table  = !empty($global['table']) ?
-			$global['table'] : null;
-
-		$alias = !empty($global['alias']) ?
-			$global['alias']: null;
-
-		$alias_dot = !empty($alias) ?
-			$alias . "." : null;
-
-		$set = !empty($global['set']) ?
-			$global['set'] : null;
-
-		$where = !empty($global['where']) ?
-			$global['where'] : null;
-
-		if($this->preferences['operation'] == self::SELECT) {
-			if($count == true) {
-				$query .= "SELECT count(*)";
-				$query .= " FROM `" . $table . "`";
-			} elseif(empty($fields)) {
-				$query .= "SELECT *";
-				$query .= " FROM `" . $table . "`";
-
-			} else {
-				$query .= "SELECT";
-
-				for($i = 0; $i < count($fields); $i++) {
-					$field = $fields[$i];
-
-					$field = !empty($alias) ?
-						$alias_dot . $field : $field;
-
-					$query .= $i == 0 ?
-						" `" . $field . "`" : ", `" . $field . "`";
-				}
-
-				$query .= " FROM";
-				$query .= !empty($alias) ?
-					" `" . $table . "` AS `" . $alias . "`" : " `" . $table . "`";
-			}
-
-			if(isset($where)) {
-				$query .= " WHERE " . $where;
-			}
+		if($this->operation == self::SELECT) {
+			$query = $this->generateQuerySelect();
  		}
 
-		if($this->preferences['operation'] == self::INSERT
-			&& !empty($set)
+		if($this->operation == self::INSERT
+			&& !empty($this->set)
 		) {
-			$query .= "INSERT INTO `" . $table . "`";
-
-			$keyLine = '';
-			$valLine = '';
-
-			$index = 0;
-			foreach ($set as $key => $val) {
-				$keyLine .= $index == 0 ?
-					"`" . $key . "`" : ", `" . $key . "`";
-
-				$valLine .= $index == 0 ?
-					"'" . $val . "'" : ", '" . $val . "'";
-
-				$index++;
-			}
-
-			$query .= " (" . $keyLine . ")";
-			$query .= " VALUES(" . $valLine . ")";
+			$query .= $this->generateQueryInsert();
 		}
 
-		if($this->preferences['operation'] == self::UPDATE
-			&& !empty($set)
-			&& !empty($where)
+		if($this->operation == self::UPDATE
+			&& !empty($this->table)
+			&& !empty($this->set)
+			&& !empty($this->where)
 		) {
-			$query .= "UPDATE `" . $table . "`";
-			$query.= " SET";
-
-			$index = 0;
-			foreach ($set as $key => $value) {
-				$query .= $index == 0 ?
-					" `" . $key . "`='" . $value . "'" :
-					", `" . $key . "`='" . $value . "'";
-
-				$index++;
-			}
-
-			$query .= " WHERE " . $where;
+			$query = $this->generateQueryUpdate();
 		}
 
-		if($this->preferences['operation'] == self::DELETE
-			&& !empty($where)
+		if($this->operation == self::DELETE
+			&& !empty($this->table)
+			&& !empty($this->where)
 		) {
-			$query .= "DELETE";
-			$query .= " FROM `" . $table . "`";
-			$query .= " WHERE " . $where;
+			$query = $this->generateQueryDelete();
 		}
 
 		return $this->query = $query;
+	}
+
+	private function generateQuerySelect()
+	{
+		$query = "SELECT";
+
+		if(!empty($fields)) {
+			$query .= empty($this->alias) ?
+				" *" : " " . $this->alias . ".*";
+		} else {
+			$query .= $this->generateQuerySelectFields();
+		}
+
+		$query .= $this->generateQueryFrom();
+		$query .= $this->generateQueryWhere();
+		$query .= $this->generateQueryOrder();
+		$query .= $this->generateQueryLimit();
+		$query .= $this->generateQueryOffset();
+
+		return $query;
+	}
+
+	private function generateQueryInsert()
+	{
+		$query = "INSERT INTO";
+		$query .= " " . $this->table;
+		$query .= $this->generateQueryInsertSet();
+
+		return $query;
+	}
+
+	private function generateQueryUpdate()
+	{
+		$query = "UPDATE";
+		$query .= " " . $this->table;
+		$query .= " SET";
+		$query .= $this->generateQueryUpdateSet();
+		$query .= $this->generateQueryWhere();
+
+		return $query;
+	}
+
+	private function generateQueryDelete()
+	{
+		$query = "DELETE";
+		$query .= $this->generateQueryFrom();
+		$query .= $this->generateQueryWhere();
+		$query .= $this->generateQueryOrder();
+		$query .= $this->generateQueryLimit();
+		$query .= $this->generateQueryOffset();
+
+		return $query;
+	}
+
+	private function generateQuerySelectFields()
+	{
+		$query = '';
+
+		for($i = 0; $i < count($this->fields); $i++) {
+			$field = $this->fields[$i];
+
+			$query .= $i == 0 ?
+				" " . $field . "" : ", " . $field . "";
+		}
+
+		return $query;
+	}
+
+	private function generateQueryUpdateSet()
+	{
+		$query 	= '';
+		$in 	= 0;
+
+		foreach ($this->set as $key => $value) {
+			$query .= $in == 0 ?
+				" `" . $key . "`='" . $value . "'" :
+				", `" . $key . "`='" . $value . "'";
+
+			$in++;
+		}
+
+		return $query;
+	}
+
+	private function generateQueryInsertSet()
+	{
+		$query 		= '';
+		$in 		= 0;
+		$columns 	= '';
+		$values 	= '';
+
+		foreach ($this->set as $col => $val) {
+			if(!empty($val)) {
+				$columns .= $in == 0 ?
+					"`" . $col . "`" : ", `" . $col . "`";
+
+				$values .= $in == 0 ?
+					"'" . $val . "'" : ", '" . $val . "'";
+			}
+
+			$in++;
+		}
+
+		$query .= " (" . $columns . ")";
+		$query .= " VALUES(" . $values . ")";
+
+		return $query;
+	}
+
+	private function generateQueryFrom()
+	{
+		$query = " FROM";
+		$query .= empty($this->alias) ?
+			" " . $this->table : " " . $this->table . " " . $this->alias;
+
+		return $query;
+	}
+
+	private function generateQueryWhere()
+	{
+		return !empty($this->where) ?
+			" WHERE " . $this->where : "";
+	}
+
+	private function generateQueryOrder()
+	{
+		return !empty($this->order) ?
+			" " . $this->order : "";
+	}
+
+	private function generateQueryLimit()
+	{
+		return !empty($this->limit) ?
+			" " . $this->limit : "";
+	}
+
+	private function generateQueryOffset()
+	{
+		return !empty($this->limit) && !empty($this->offset) ?
+			" " . $this->offset : "";
 	}
 }

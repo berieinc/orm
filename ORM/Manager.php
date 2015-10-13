@@ -90,6 +90,8 @@ class Manager extends \Berie\ORM
 				->where('id', $id)
 				->getQuery();
 		} else {
+			unset($data['id']);
+
 			(new \Berie\ORM\Builder($this->database))
 				->insert($table)
 				->set($data)
