@@ -348,7 +348,7 @@ class Builder
 	{
 		$query = "SELECT";
 
-		if(!empty($fields)) {
+		if(empty($fields)) {
 			$query .= empty($this->alias) ?
 				" *" : " " . $this->alias . ".*";
 		} else {
