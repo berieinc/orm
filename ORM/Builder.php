@@ -257,6 +257,7 @@ class Builder
 		$this->query = !empty($this->query) ?
 			$this->query : $this->generateQuery();
 
+			
 		$this->queryClass = new Query($this->database, $this->query);
 
 		return;
@@ -278,13 +279,15 @@ class Builder
 	public function getEntity()
 	{
 		$entity = [];
-		$array 	= $this->getArray();
+
+		$resultData = $this->getArray();
+
 		$preferences = [
 			'table'	=> $this->table,
 		];
 
-		if(count($array) >= 1) {
-			foreach ($array as $key => $value) {
+		if(count($resultData) >= 1) {
+			foreach ($resultData as $key => $value) {
 				$preferences['id'] = $value['id'];
 
 				$entity[] = new \Berie\ORM\Entity($value, $preferences);
@@ -318,7 +321,7 @@ class Builder
  		}
 
 		if($this->operation == self::INSERT
-			&& !empty($set)
+			&& !empty($this->set)
 		) {
 			$query .= $this->generateQueryInsert();
 		}
@@ -412,7 +415,7 @@ class Builder
 		$query 	= '';
 		$in 	= 0;
 
-		foreach ($set as $key => $value) {
+		foreach ($this->set as $key => $value) {
 			$query .= $in == 0 ?
 				" `" . $key . "`='" . $value . "'" :
 				", `" . $key . "`='" . $value . "'";
@@ -430,12 +433,14 @@ class Builder
 		$columns 	= '';
 		$values 	= '';
 
-		foreach ($set as $col => $val) {
-			$columns .= $in == 0 ?
-				"`" . $col . "`" : ", `" . $key . "`";
+		foreach ($this->set as $col => $val) {
+			if(!empty($val)) {
+				$columns .= $in == 0 ?
+					"`" . $col . "`" : ", `" . $col . "`";
 
-			$values .= $in == 0 ?
-				"'" . $col . "'" : ", '" . $val . "'";
+				$values .= $in == 0 ?
+					"'" . $val . "'" : ", '" . $val . "'";
+			}
 
 			$in++;
 		}
