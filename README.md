@@ -1,5 +1,13 @@
 # PHP ORM for working with mySQL
 
+## Composer Package:
+execute: ```php composer.phar require berie/orm```
+
+information: https://packagist.org/packages/berie/orm
+
+
+## Cookbook:
+
 ```
 $config = [
     'unix_socket' => 'path/to/unix',
@@ -11,7 +19,7 @@ $config = [
 ];
 ```
 
-## runQuery() - self execute mysql request.
+### runQuery() - self execute mysql request.
 ```
 $orm = new \Berie\ORM($config);
 ```
@@ -24,7 +32,7 @@ $orm->runQuery("SELECT * FROM `foo`");
 $orm->runQuery("DELETE FROM `foo` WHERE `id`='100'");
 ```
 
-## getBuilder() - simple way to build query and execute.
+### getBuilder() - simple way to build query and execute.
 
 ```
 $orm = new \Berie\ORM($config);
@@ -78,7 +86,7 @@ $select->getEntity();
 $select->getCount();
 ```
 
-## getManager() - simple way to build query and execute.
+### getManager() - simple way to build query and execute.
 **getManager()->__construct()**
 ```
 $orm = new \Berie\ORM($config);
