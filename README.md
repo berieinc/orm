@@ -1,4 +1,4 @@
-# PHP ORM for working with mySQL
+# PHP MySQL ORM (composer install, zend2)
 
 ## Composer Package:
 execute: ```php composer.phar require berie/orm```
