@@ -15,7 +15,7 @@ class Manager extends \Berie\ORM
 		$this->database 	= $database;
 	}
 
-	function generate()
+	function create()
 	{
 		$table = $this->table;
 
@@ -75,6 +75,57 @@ class Manager extends \Berie\ORM
 			->getEntity();
 
 		return $object;
+	}
+
+	function countAll()
+	{
+		$count = (new \Berie\ORM\Builder($this->database))
+			->select()
+			->from($this->table)
+			->getCount();
+
+		return $count;
+	}
+
+	function countBy($condition = [])
+	{
+		$count = (new \Berie\ORM\Builder($this->database))
+			->select()
+			->from($this->table)
+			->where($condition)
+			->getCount();
+
+		return $count;
+	}
+
+	function exist($identifier)
+	{
+		$query = (new \Berie\ORM\Builder($this->database))
+			->select()
+			->from($this->table)
+			->where('id', $identifier)
+			->queryRequest();
+
+		$query = "SELECT EXISTS(" . $query . ")";
+
+		$prepare = (new \Berie\ORM\Query($this->database, $query))
+			->getPrepare();
+
+		return (array_values($prepare->fetchAll(\PDO::FETCH_ASSOC)[0])[0] === '1') ?
+			true : false;
+	}
+
+	private function findRelationship($table)
+	{
+		$query = "SELECT "
+			. "`TABLE_SCHEMA`, `TABLE_NAME`, `COLUMN_NAME`, "
+			. "`REFERENCED_TABLE_SCHEMA`, `REFERENCED_TABLE_NAME`, "
+			. "`REFERENCED_COLUMN_NAME` "
+			. "FROM "
+			. "`INFORMATION_SCHEMA`.`KEY_COLUMN_USAGE` "
+			. "WHERE "
+			. "`TABLE_SCHEMA` = SCHEMA() "
+			. "AND `REFERENCED_TABLE_NAME` IS NOT NULL";
 	}
 
 	function saveEntity(\Berie\ORM\Entity $entity)

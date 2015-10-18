@@ -41,7 +41,7 @@ class Entity
 	function get($key)
 	{
 		if($key) {
-			$this->data->{$key};
+			return $this->data->{$key};
 		}
 
 		return;
@@ -55,9 +55,7 @@ class Entity
 	 */
 	function set($key, $value)
 	{
-		$this->data->{$key} = $value;
-
-		return $this;
+		return $this->data->{$key} = $value;
 	}
 
 	/**

@@ -257,10 +257,18 @@ class Builder
 		$this->query = !empty($this->query) ?
 			$this->query : $this->generateQuery();
 
-			
+
 		$this->queryClass = new Query($this->database, $this->query);
 
-		return;
+		return $this->query;
+	}
+
+	public function queryRequest()
+	{
+		$this->query = !empty($this->query) ?
+			$this->query : $this->generateQuery();
+
+		return $this->query;
 	}
 
 	/**
@@ -268,10 +276,11 @@ class Builder
 	 */
 	public function getArray()
 	{
-		!empty($this->queryClass) ?
-			$this->queryClass : $this->getQuery();
+		empty($this->queryClass) ?
+			$this->getQuery() : null;
 
-		$prepare = $this->queryClass->getPrepare();
+		$prepare = $this->queryClass
+			->getPrepare();
 
 		return $prepare->fetchAll(\PDO::FETCH_ASSOC);
 	}
@@ -282,21 +291,25 @@ class Builder
 
 		$resultData = $this->getArray();
 
-		$preferences = [
-			'table'	=> $this->table,
-		];
+		if(!empty($resultData)) {
+			$preferences = [
+				'table'	=> $this->table,
+			];
 
-		if(count($resultData) >= 1) {
-			foreach ($resultData as $key => $value) {
-				$preferences['id'] = $value['id'];
+			if(count($resultData) >= 1) {
+				foreach ($resultData as $key => $value) {
+					$preferences['id'] = $value['id'];
 
-				$entity[] = new \Berie\ORM\Entity($value, $preferences);
+					$entity[] = new \Berie\ORM\Entity($value, $preferences);
+				}
+			} else {
+
 			}
-		} else {
 
+			return $entity;
 		}
 
-		return $entity;
+		return;
 	}
 
 	/**
@@ -304,10 +317,11 @@ class Builder
 	 */
 	public function getCount()
 	{
-		$this->queryClass = !empty($this->queryClass) ?
-			$this->queryClass : $this->getQuery();
+		empty($this->queryClass) ?
+			$this->getQuery() : null;
 
-		$prepare = $this->queryClass->getPrepare();
+		$prepare = $this->queryClass
+			->getPrepare();
 
 		return $prepare->rowCount();
 	}
@@ -348,7 +362,7 @@ class Builder
 	{
 		$query = "SELECT";
 
-		if(!empty($fields)) {
+		if(empty($fields)) {
 			$query .= empty($this->alias) ?
 				" *" : " " . $this->alias . ".*";
 		} else {
