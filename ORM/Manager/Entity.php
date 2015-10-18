@@ -1,17 +1,16 @@
 <?php
 
-namespace Berie\ORM;
+namespace Berie\ORM\Manager;
 
 /**
- * @package 	Berie\ORM
+ * @package 	Berie\ORM\Manager
  * @subpackage 	Entity
  * @author 		Eugen Melnychenko
  */
 class Entity
 {
 	private $data;
-	private $id;
-	private $table;
+	private $pref;
 
 	/**
 	 * FORM ENTITY
@@ -22,13 +21,9 @@ class Entity
 	 */
 	function __construct(array $data, $preferences = [])
 	{
-		$this->data = new \Berie\ORM\EntityData($data);
+		$this->data = new \Berie\ORM\Manager\EntityData($data);
 
-		$this->id = isset($preferences['id']) ?
-			$preferences['id'] : null;
-
-		$this->table 	= isset($preferences['table']) ?
-			$preferences['table'] : null;
+		$this->pref = $preferences;
 
 		return $this;
 	}
@@ -55,7 +50,12 @@ class Entity
 	 */
 	function set($key, $value)
 	{
-		return $this->data->{$key} = $value;
+		$this->data = (new \Berie\ORM\DataType\Factory())
+			->managerDataFilter($this, $key, $value);
+
+		$this->data = new \Berie\ORM\Manager\EntityData($this->data);
+
+		return $value;
 	}
 
 	/**
@@ -65,9 +65,7 @@ class Entity
 	 */
 	function getData()
 	{
-		$data = get_object_vars($this->data);
-
-		return $data;
+		return get_object_vars($this->data);
 	}
 
 	/**
@@ -78,18 +76,21 @@ class Entity
 	function setData($data)
 	{
 		foreach ($data as $key => $item) {
-			$this->data->{$key} = $item;
+			$this->data = (new \Berie\ORM\DataType\Factory())
+				->managerDataFilter($this, $key, $item);
 		}
+
+		$this->data = new \Berie\ORM\Manager\EntityData($this->data);
 
 		return;
 	}
 
-	function getPreference($key)
+	function getPref()
 	{
-		return $this->{$key};
+		return $this->pref;
 	}
 
-	function setPreference($key, $value)
+	function setPref($key, $value)
 	{
 		$this->{$key} = $value;
 

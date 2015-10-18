@@ -70,7 +70,7 @@ class ORM
 	 */
 	public function save(\Berie\ORM\Entity $entity)
 	{
-		$table = $entity->getPreference('table');
+		$table = $entity->getPref()['params']['table'];
 
 		$manager = new Manager($this->connect, $table);
 		$entity  = $manager->saveEntity($entity);
@@ -87,11 +87,11 @@ class ORM
 	 */
 	public function remove(\Berie\ORM\Entity $entity)
 	{
-		$table = $entity->getPreference('table');
+		$table = $entity->getPref()['params']['table'];
 
 		$manager = new Manager($this->connect, $table);
 		$manager->removeEntity($entity);
-		
+
 		return $entity;
 	}
 }

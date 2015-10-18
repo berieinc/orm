@@ -128,11 +128,12 @@ class Manager extends \Berie\ORM
 			. "AND `REFERENCED_TABLE_NAME` IS NOT NULL";
 	}
 
-	function saveEntity(\Berie\ORM\Entity $entity)
+	function saveEntity(\Berie\ORM\Manager\Entity $entity)
 	{
-		$id 	= $entity->getPreference('id');
-		$table 	= $entity->getPreference('table');
-		$data 	= $entity->getData();
+		$id 	= $entity->getPref()['params']['id'];
+		$table 	= $entity->getPref()['params']['table'];
+		$data 	= (new \Berie\ORM\DataType\Factory())
+			->managerPreSave($entity);
 
 		if(!empty($id)) {
 			(new \Berie\ORM\Builder($this->database))
@@ -157,7 +158,7 @@ class Manager extends \Berie\ORM
 		return $entity;
 	}
 
-	function removeEntity(\Berie\ORM\Entity $entity)
+	function removeEntity(\Berie\ORM\Manager\Entity $entity)
 	{
 		$id 	= $entity->getPreference('id');
 		$table 	= $entity->getPreference('table');

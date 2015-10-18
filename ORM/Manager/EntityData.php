@@ -1,9 +1,9 @@
 <?php
 
-namespace Berie\ORM;
+namespace Berie\ORM\Manager;
 
 /**
- * @package 	Berie\ORM
+ * @package 	Berie\ORM\Manager
  * @subpackage 	EntityData
  * @author 		Eugen Melnychenko
  */
@@ -14,7 +14,7 @@ class EntityData
 	 *
 	 * @param array $array
 	 *
-	 * @return \Berie\ORM\Entity
+	 * @return \Berie\ORM\Manager\Entity
 	 */
 	function __construct(array $data)
 	{
