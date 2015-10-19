@@ -17,6 +17,7 @@ class Select
 	private $database;
 
 	private $table;
+	private $join;
 	private $fields;
 	private $where;
 	private $alias;
@@ -90,6 +91,32 @@ class Select
 		$this->order = empty($this->order) ?
 			(new Factory())->parse(Factory::ORDER, $data) :
 			(new Exceptions())->B0065();
+
+		return $this;
+	}
+
+	/**
+	 * @param integer $number
+	 *
+	 * @return \Berie\ORM\Builder\Select
+	 */
+	public function join($table, $alias, $on = [], $type = "INNER")
+	{
+		if(!empty($table)
+			&& !empty($on)
+		) {
+			$this->join = !empty($this->join) ?
+				$this->join : '';
+
+			foreach ($on as $key => $value) {
+				$query = $type . " JOIN " . $table . " " . $alias
+					. " ON " . $key . " = " . $value;
+				break;
+			}
+
+			$this->join .= !empty($this->join) ?
+				" " . $query : $query;
+		}
 
 		return $this;
 	}
@@ -183,6 +210,18 @@ class Select
 						]
 					];
 
+					// $relationships = $this->findRelationship();
+					//
+					// if(!empty($relationships)) {
+					// 	foreach ($relationships as $relationship) {
+					// 		var_dump($relationship['COLUMN_NAME']);
+					// 		var_dump($relationship['REFERENCED_TABLE_NAME']);
+					// 		var_dump($relationship['REFERENCED_COLUMN_NAME']);
+					// 	}
+					// }
+					//
+					// var_dump($value); die;
+
 					$entity[] = new \Berie\ORM\Manager\Entity($value, $preferences);
 				}
 			} else {
@@ -192,6 +231,34 @@ class Select
 		}
 
 		return;
+	}
+
+	private function findRelationship()
+	{
+		$return  = [];
+
+		$query = "SELECT "
+			. "`TABLE_SCHEMA`, `TABLE_NAME`, `COLUMN_NAME`, "
+			. "`REFERENCED_TABLE_SCHEMA`, `REFERENCED_TABLE_NAME`, "
+			. "`REFERENCED_COLUMN_NAME` "
+			. "FROM "
+			. "`INFORMATION_SCHEMA`.`KEY_COLUMN_USAGE` "
+			. "WHERE "
+			. "`TABLE_SCHEMA` = SCHEMA() "
+			. " AND `REFERENCED_TABLE_NAME` IS NOT NULL";
+
+		$prepare = (new \Berie\ORM\Query($this->database, $query))
+			->getPrepare();
+
+		$relationships = $prepare->fetchAll(\PDO::FETCH_ASSOC);
+
+		foreach ($relationships as $relationship) {
+			if($relationship['TABLE_NAME'] === 'users') {
+				$return[] = $relationship;
+			}
+		}
+
+		return $return;
 	}
 
 	/**
@@ -231,6 +298,7 @@ class Select
 
 		$query .= $this->generateQueryFrom();
 		$query .= (new Factory())->generate(Factory::WHERE, $this->where);
+		$query .= (new Factory())->generate(Factory::JOIN, $this->join);
 		$query .= (new Factory())->generate(Factory::ORDER, $this->order);
 		$query .= (new Factory())->generate(Factory::LIMIT, $this->limit);
 		$query .= (new Factory())->generate(Factory::OFFSET, $this->offset);

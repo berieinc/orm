@@ -7,7 +7,8 @@ namespace Berie\ORM;
  * @subpackage 	Internal
  * @author 		Eugen Melnychenko
  */
-class Internal extends \Berie\ORM
+class Internal
+	extends \Berie\ORM
 {
 
 	function __construct()

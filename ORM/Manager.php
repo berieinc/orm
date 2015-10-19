@@ -115,19 +115,6 @@ class Manager extends \Berie\ORM
 			true : false;
 	}
 
-	private function findRelationship($table)
-	{
-		$query = "SELECT "
-			. "`TABLE_SCHEMA`, `TABLE_NAME`, `COLUMN_NAME`, "
-			. "`REFERENCED_TABLE_SCHEMA`, `REFERENCED_TABLE_NAME`, "
-			. "`REFERENCED_COLUMN_NAME` "
-			. "FROM "
-			. "`INFORMATION_SCHEMA`.`KEY_COLUMN_USAGE` "
-			. "WHERE "
-			. "`TABLE_SCHEMA` = SCHEMA() "
-			. "AND `REFERENCED_TABLE_NAME` IS NOT NULL";
-	}
-
 	function saveEntity(\Berie\ORM\Manager\Entity $entity)
 	{
 		$id 	= $entity->getPref()['params']['id'];

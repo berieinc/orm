@@ -13,7 +13,7 @@ use Berie\ORM\Manager;
  */
 class ORM
 {
-	private $connect;
+	protected $connect;
 
 	/**
 	 * @param array $config

@@ -15,6 +15,8 @@ class Factory
 	const LIMIT 	= 4;
 	const OFFSET 	= 5;
 
+	const JOIN 		= 7;
+
 	public function parse($func, $data)
 	{
 		switch ($func) {
@@ -92,6 +94,11 @@ class Factory
 		switch ($func) {
 			case self::FROM:
 				# code...
+				break;
+
+			case self::JOIN:
+				return !empty($data) ?
+					" " . $data : "";
 				break;
 
 			case self::WHERE:

@@ -13,6 +13,7 @@ use Berie\ORM\Builder\Update;
  * @author 		Eugen Melnychenko
  */
 class Builder
+	extends \Berie\ORM
 {
 	private $database;
 
