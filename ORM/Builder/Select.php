@@ -267,7 +267,7 @@ class Select
 	public function getCount()
 	{
 		empty($this->queryClass) ?
-			$this->getQuery() : null;
+			$this->runQuery() : null;
 
 		$prepare = $this->queryClass
 			->getPrepare();
@@ -297,8 +297,8 @@ class Select
 		}
 
 		$query .= $this->generateQueryFrom();
-		$query .= (new Factory())->generate(Factory::WHERE, $this->where);
 		$query .= (new Factory())->generate(Factory::JOIN, $this->join);
+		$query .= (new Factory())->generate(Factory::WHERE, $this->where);
 		$query .= (new Factory())->generate(Factory::ORDER, $this->order);
 		$query .= (new Factory())->generate(Factory::LIMIT, $this->limit);
 		$query .= (new Factory())->generate(Factory::OFFSET, $this->offset);
