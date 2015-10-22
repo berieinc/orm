@@ -4,6 +4,8 @@ namespace Berie\ORM\Builder;
 
 use Berie\ORM\Builder\Factory;
 
+use Berie\ORM\Query;
+
 /**
  * @package 	Berie\ORM\Builder
  * @subpackage 	Update

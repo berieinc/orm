@@ -71,7 +71,7 @@ class Factory
 		return $data;
 	}
 
-	public function managerDataFilter(\Berie\ORM\Entity $entity, $key, $value)
+	public function managerDataFilter(\Berie\ORM\Manager\Entity $entity, $key, $value)
 	{
 		$data = $entity->getData();
 
@@ -115,7 +115,7 @@ class Factory
 		return $data;
 	}
 
-	public function managerPreSave(\Berie\ORM\Entity $entity)
+	public function managerPreSave(\Berie\ORM\Manager\Entity $entity)
 	{
 		$data 		= $entity->getData();
 		$dataType 	= $entity->getPref()["dataType"];

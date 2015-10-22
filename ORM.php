@@ -68,7 +68,7 @@ class ORM
 	 *
 	 * @return \Berie\ORM\Entity
 	 */
-	public function save(\Berie\ORM\Entity $entity)
+	public function save(\Berie\ORM\Manager\Entity $entity)
 	{
 		$table = $entity->getPref()['params']['table'];
 
@@ -85,7 +85,7 @@ class ORM
 	 *
 	 * @return \Berie\ORM\Entity
 	 */
-	public function remove(\Berie\ORM\Entity $entity)
+	public function remove(\Berie\ORM\Manager\Entity $entity)
 	{
 		$table = $entity->getPref()['params']['table'];
 
